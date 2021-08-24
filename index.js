@@ -42,6 +42,7 @@ function identifyOutOfSync (graph, versionType = 'original') {
 }
 
 function compareGT (target, current) {
+  if (!target) return false
   if (target.includes('major')) {
     return !current || current.includes('minor') || current.includes('patch') || current.includes('prerelease')
   }

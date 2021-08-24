@@ -1,4 +1,6 @@
 const chalk = require('chalk');
+const { inc } = require('./lib/util');
+const semver = require('semver');
 const { buildGraph, targetUpdate, identifyOutOfSync, commit } = require('./index');
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
 
@@ -10,13 +12,17 @@ function byKey([a], [b]) {
   return a.localeCompare(b)
 }
 
-function printUpdatedVersions (targetPkg, updated) {
-  console.log(`Moving ${targetPkg.name} from ${targetPkg.version.original} to ${targetPkg.version.pending} implies:`)
-  Object.entries(updated).sort(byKey).forEach(([name, { version: { original, pending } }]) => {
+function printChangedVersions (graph) {
+  Object.entries(graph).sort(byKey).forEach(([name, { version: { original, pending } }]) => {
     if (original !== pending) {
       console.log(`  ${name} ${original} --> ${pending}`)
     }
   })
+}
+
+function printUpdatedVersions (targetPkg, updated) {
+  console.log(`Moving ${targetPkg.name} from ${targetPkg.version.original} to ${targetPkg.version.pending} implies:`)
+  printChangedVersions(updated)
 }
 
 module.exports = function getHandlers () {
@@ -69,6 +75,10 @@ module.exports = function getHandlers () {
         console.log(chalk.bgGray('devDependencies'))
         console.table(outOfSync.devDependencies)
       }
+
+      if (outOfSync.dependencies.length + outOfSync.peerDependencies.length + outOfSync.devDependencies.length === 0) {
+        console.log('Everything up to date.')
+      }
     } else if (action === 'Prepare new release') {
       let nextAction
       let userLoop = 'continue'
@@ -95,13 +105,50 @@ module.exports = function getHandlers () {
           commit(connections)
           userLoop = 'done'
         }
-        if (!nextAction && nextAction === 'Reject all changes') {
+        if (nextAction === 'Reject all changes') {
           console.log('Aborting...')
           userLoop = 'done'
         }
       }
+    } else if ('Update out of sync packages') {
+      const fixOutOfSync = (pkg) => {
+        const needsMajor = pkg.needsMajorUpdateIfConsumedFlat()
+        if (needsMajor) {
+          const { prerelease } = semver.parse(pkg.version.original)
+          
+          let targetVersion = inc(pkg.version.original, 'major')
+          const pr = prerelease && prerelease.length ? prerelease[0] : null
+          if (pkg.version.original.startsWith('0')) {
+            targetVersion = inc(pkg.version.original, `major-pre`)
+            if (pr) {
+              targetVersion = inc(pkg.version.original, `major-pre${pr}`)
+            }
+          } else if (pr) {
+            targetVersion = inc(pkg.version.original, `major-${pr}`)
+          }
+          targetUpdate(pkg, targetVersion, connections)
+        }
+      }
+      Object.values(connections).forEach(fixOutOfSync)
+      Object.values(connections).forEach(fixOutOfSync)
+      Object.values(connections).forEach(fixOutOfSync)
+
+      console.log('The following packages will update:')
+      printChangedVersions(connections)
+
+      let nextAction = await select('What would you like to do next?', [
+        'Accept all changes',
+        'Reject all changes',
+      ])
+      
+      if (nextAction === 'Accept all changes') {
+        commit(connections)
+      }
+      if (nextAction === 'Reject all changes') {
+        console.log('Aborting...')
+      }
     } else {
-      console.log('Not implemented yet, sorry')
+      console.log('Not implemented yet, sorry.')
     }
   }
 
