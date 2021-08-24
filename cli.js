@@ -1,15 +1,10 @@
 #!/usr/bin/env node
-const { resolve } = require('path')
 const { Command } = require('commander');
-const getHandlers = require('./index')
-const pojoStick = require('pojo-stick')
+const getHandlers = require('./cli-actions')
 const pkg = require('./package.json')
 
 ;(async () => {
-  // persistent appData
-  const appData = await pojoStick(resolve('.', '.data-store.json'))
-
-  const { test } = getHandlers({ appData })
+  const { graph } = getHandlers()
 
   const program = new Command();
 
@@ -20,9 +15,9 @@ const pkg = require('./package.json')
   ;
   
   program
-    .command('test <action> [type] [rest...]')
-    .description('Test out the CLI API')
-    .action(test)
+    .command('graph')
+    .description('View the dependency graph')
+    .action(graph)
   ;
   
   program.parse(process.argv);

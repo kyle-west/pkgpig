@@ -1,28 +1,20 @@
-const chalk = require('chalk');
-const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
+const { resolve } = require('path')
+const { makeDependencyGraph } = require('./lib/pkg');
+const { getAllPackages } = require('./lib/util');
 
-module.exports = function getHandlers ({ appData }) {
-  
-  async function test (action, type, rest) {
-    appData.test = appData.test || { timesCalled: 0, lastCalledArgs: {} }
-    const lastCalledArgs = appData.test.lastCalledArgs
+function getPackages() {
+  const packageFilenames = getAllPackages()
+  const packageFiles = packageFilenames
+    .map((file) => ({ file, contents: require(resolve(file)) }))
+  return packageFiles;
+}
 
-    if (action === 'input') {
-      console.log(await confirm('This is a confirm prompt.', true))      
-      console.log(await text('This is a question, answer it!'))
-      console.log(await select('Select a food', ['Taco', 'Burrito', 'Salad']))
-      console.log(await checkbox('Select any foods',['Taco', 'Burrito', 'Salad']))
-      console.log(await number('type a number'))
-      console.log(await password('type a password'))
+function buildGraph (packages) {
+  const graph = makeDependencyGraph(getPackages(packages))
+  return graph;
+}
 
-    } else {
-      console.log('`test` called for the', ++appData.test.timesCalled, 'time')
-      console.log('Current Args: ', chalk.blue(action), chalk.green(type), { rest })
-      console.log('Previous Args:', chalk.blue(lastCalledArgs.action), chalk.green(lastCalledArgs.type), { rest: lastCalledArgs.rest })
-    }
-
-    appData.test.lastCalledArgs = { action, type, rest }
-  }
-
-  return { test }
+module.exports = {
+  getPackages,
+  buildGraph,
 }
