@@ -1,9 +1,22 @@
 const chalk = require('chalk');
-const { buildGraph, identifyOutOfSync } = require('./index');
+const { buildGraph, targetUpdate, identifyOutOfSync, commit } = require('./index');
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
 
 function printDeps(deps = [], color = chalk.blue) {
   return deps.map(({ name }) => color(name)).join('  ')
+}
+
+function byKey([a], [b]) {
+  return a.localeCompare(b)
+}
+
+function printUpdatedVersions (targetPkg, updated) {
+  console.log(`Moving ${targetPkg.name} from ${targetPkg.version.original} to ${targetPkg.version.pending} implies:`)
+  Object.entries(updated).sort(byKey).forEach(([name, { version: { original, pending } }]) => {
+    if (original !== pending) {
+      console.log(`  ${name} ${original} --> ${pending}`)
+    }
+  })
 }
 
 module.exports = function getHandlers () {
@@ -56,19 +69,37 @@ module.exports = function getHandlers () {
         console.log(chalk.bgGray('devDependencies'))
         console.table(outOfSync.devDependencies)
       }
-      debugger
     } else if (action === 'Prepare new release') {
-      let targetPkg
-      while (!targetPkg) {
-        const targetName = await text('Which package are you wanting to release?')
-        targetPkg = connections[targetName]
-        if (!targetPkg) {
-          console.log(chalk.red('Package not found, please enter again'))
+      let nextAction
+      let userLoop = 'continue'
+      
+      while (userLoop !== 'done') {
+        const targetName = await select('Which package are you wanting to release?', Object.keys(connections).sort())
+        const targetPkg = connections[targetName]
+        const promptDetail = targetPkg.version.pending === targetPkg.version.original
+          ? `current is ${targetPkg.version.pending}`
+          : `pending is ${targetPkg.version.pending}`;
+        const targetVersion = await text(`What is the new version (${promptDetail})?`)
+        
+        console.log(chalk.green(`Preparing update for ${targetPkg.name} to move to version ${targetVersion}`))
+        const updated = targetUpdate(targetPkg, targetVersion, connections)
+        printUpdatedVersions(targetPkg, updated)
+        
+        nextAction = await select('What would you like to do next?', [
+          'Accept all changes',
+          'Reject all changes',
+          'Prepare another update alongside the current pending state'
+        ])
+
+        if (nextAction === 'Accept all changes') {
+          commit(connections)
+          userLoop = 'done'
+        }
+        if (!nextAction && nextAction === 'Reject all changes') {
+          console.log('Aborting...')
+          userLoop = 'done'
         }
       }
-      const targetVersion = await text(`What is the new version (current is ${targetPkg.version.original})?`)
-      console.log(chalk.green(`Preparing update for ${targetPkg.name} to move to version ${targetVersion}`))
-      console.log('Not implemented yet, sorry')
     } else {
       console.log('Not implemented yet, sorry')
     }
