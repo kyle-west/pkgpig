@@ -7,10 +7,12 @@ Manage semantic versioning in a monorepo context.
 ## CLI
 
 
-Example CLI command
+### `graph`
+
+Output the dependency graph for the current monorepo
 
 ```
-pkgpig test <action> <type> [rest...]
+pkgpig graph
 ```
 
 

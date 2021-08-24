@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const { buildGraph } = require('./index');
+const { buildGraph, identifyOutOfSync } = require('./index');
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
 
 function printDeps(deps = [], color = chalk.blue) {
@@ -34,5 +34,45 @@ module.exports = function getHandlers () {
     })
   }
 
-  return { test, graph }
+  async function sync () {
+    const connections = buildGraph()
+    const action = await select('What would you like to do?', [
+      'View out of sync packages',
+      'Update out of sync packages',
+      'Prepare new release',
+    ])
+
+    if (action === 'View out of sync packages') {
+      const outOfSync = identifyOutOfSync(connections)
+      if (outOfSync.dependencies.length) {
+        console.log(chalk.bgBlue('dependencies'))
+        console.table(outOfSync.dependencies)
+      }
+      if (outOfSync.peerDependencies.length) {
+        console.log(chalk.bgCyan('peerDependencies'))
+        console.table(outOfSync.peerDependencies)
+      }
+      if (outOfSync.devDependencies.length) {
+        console.log(chalk.bgGray('devDependencies'))
+        console.table(outOfSync.devDependencies)
+      }
+      debugger
+    } else if (action === 'Prepare new release') {
+      let targetPkg
+      while (!targetPkg) {
+        const targetName = await text('Which package are you wanting to release?')
+        targetPkg = connections[targetName]
+        if (!targetPkg) {
+          console.log(chalk.red('Package not found, please enter again'))
+        }
+      }
+      const targetVersion = await text(`What is the new version (current is ${targetPkg.version.original})?`)
+      console.log(chalk.green(`Preparing update for ${targetPkg.name} to move to version ${targetVersion}`))
+      console.log('Not implemented yet, sorry')
+    } else {
+      console.log('Not implemented yet, sorry')
+    }
+  }
+
+  return { test, graph, sync }
 }

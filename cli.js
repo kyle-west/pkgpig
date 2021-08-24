@@ -4,7 +4,7 @@ const getHandlers = require('./cli-actions')
 const pkg = require('./package.json')
 
 ;(async () => {
-  const { graph } = getHandlers()
+  const { graph, sync } = getHandlers()
 
   const program = new Command();
 
@@ -18,6 +18,12 @@ const pkg = require('./package.json')
     .command('graph')
     .description('View the dependency graph')
     .action(graph)
+  ;
+  
+  program
+    .command('sync')
+    .description('Manage package versions in coordination')
+    .action(sync)
   ;
   
   program.parse(process.argv);
