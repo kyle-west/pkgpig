@@ -15,7 +15,7 @@ const pkg = require('./package.json')
 
   program
     .version(pkg.version)
-    .description('__REPLACE_DESCRIPTION_WITH_MAKE_CMD__')
+    .description('Manage semantic versioning in a monorepo context.')
     .option('-d, --debug', 'enable debug mode')
   ;
   

@@ -1,9 +1,9 @@
 {
-  "name": "__REPLACE_PACKAGE_NAME_WITH_MAKE_CMD__",
+  "name": "pkgpig",
   "version": "0.1.0",
-  "description": "__REPLACE_DESCRIPTION_WITH_MAKE_CMD__",
+  "description": "Manage semantic versioning in a monorepo context.",
   "main": "cli.js",
-  "repository": "https://github.com/kyle-west/__REPLACE_PACKAGE_NAME_WITH_MAKE_CMD__",
+  "repository": "https://github.com/kyle-west/pkgpig",
   "author": "kyle-west",
   "license": "UNLICENSED",
   "private": true,
@@ -11,11 +11,10 @@
     "chalk": "^4.1.0",
     "commander": "^6.1.0",
     "inquirer": "^7.3.3",
-    "jest": "^26.6.3",
-    "pojo-stick": "^0.1.0"
+    "jest": "^26.6.3"
   },
   "bin": {
-    "__REPLACE_PACKAGE_NAME_WITH_MAKE_CMD__": "./cli.js"
+    "pkgpig": "./cli.js"
   },
   "scripts": {
     "test": "jest --watch",
