@@ -1,6 +1,6 @@
 # 🐷 pkgpig
 
-_WIP: This is a refactor of some other CLI I wrote. Hopefully there are no bugs. But if so please [report it on GitHub](). Thank you for your patience._
+_WIP: This is a refactor of some other CLI I wrote. Hopefully there are no bugs. But if so please [report it on GitHub](https://github.com/kyle-west/pkgpig/issues). Thank you for your patience._
 
 ![Status Badge](https://github.com/kyle-west/pkgpig/workflows/Install%20and%20Test%20Flow/badge.svg)
 
