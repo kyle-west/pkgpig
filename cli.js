@@ -9,9 +9,9 @@ const pkg = require('./package.json')
   const program = new Command();
 
   program
-    .version(pkg.version)
-    .description('Manage semantic versioning in a monorepo context.')
-    .option('-d, --debug', 'enable debug mode')
+    .command('sync')
+    .description('Manage package versions in coordination')
+    .action(sync)
   ;
   
   program
@@ -21,10 +21,9 @@ const pkg = require('./package.json')
   ;
   
   program
-    .command('sync')
-    .description('Manage package versions in coordination')
-    .action(sync)
+    .version(pkg.version)
+    .description('Manage semantic versioning in a monorepo context.')
   ;
-  
+
   program.parse(process.argv);
 })()

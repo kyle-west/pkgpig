@@ -56,9 +56,9 @@ module.exports = function getHandlers () {
   async function sync () {
     const connections = buildGraph()
     const action = await select('What would you like to do?', [
+      'Prepare new release',
       'View out of sync packages',
       'Update out of sync packages',
-      'Prepare new release',
     ])
 
     if (action === 'View out of sync packages') {

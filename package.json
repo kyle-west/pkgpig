@@ -20,5 +20,12 @@
   "scripts": {
     "test": "jest --watch",
     "test:ci": "jest"
-  }
+  },
+  "keywords": [
+    "semantic",
+    "version",
+    "package",
+    "monorepo",
+    "upgrade"
+  ]
 }
