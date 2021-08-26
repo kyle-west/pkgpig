@@ -39,23 +39,20 @@ _CLI shortcuts to the `sync` options coming in a later version_
 
 ### `graph`
 
-Output the dependency graph for the current monorepo.
+Output the inverse dependency graph for the current monorepo. (What `@your-org` packages are dependent on a given package)
 
 ```
-pkgpig graph
+pkgpig graph [packageNames...]
 ```
 
 Will output something of the order
 ```
-@your-org/mono-overlay 
-   DEPS @your-org/mono-axios  @your-org/mono-debug  @your-org/mono-icon  @your-org/mono-locale  @your-org/mono-router 
-   PEER @your-org/mono-ui 
-   DEVS @your-org/mono-helpers
+@your-org/form is depended on by: 
+  as a dependency:       @your-org/login-dialog  @your-org/subscribe-form
+  as a devDependency:    @your-org/ui
 
-@your-org/mono-lang-picker 
-   DEPS @your-org/mono-locale 
-   PEER @your-org/mono-ui
-   DEVS @your-org/mono-helpers
+@your-org/ui is depended on by: 
+  as a peerDependency:   @your-org/form  @your-org/login-dialog  @your-org/subscribe-form
 ...
 ```
 

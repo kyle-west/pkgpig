@@ -15,8 +15,9 @@ const pkg = require('./package.json')
   ;
   
   program
-    .command('graph')
+    .command('graph [packages...]')
     .description('View the dependency graph')
+    // .option('-t, --table', 'View graph as a table') // COMING SOON!
     .action(graph)
   ;
   

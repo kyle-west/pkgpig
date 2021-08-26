@@ -2,7 +2,8 @@ const chalk = require('chalk');
 const { inc } = require('./lib/util');
 const semver = require('semver');
 const { buildGraph, targetUpdate, identifyOutOfSync, commit } = require('./index');
-const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
+const { confirm, checkbox, text, select, number, password } = require('./lib/inputs');
+const { inverseDependencyGraph } = require('./lib/pkg');
 
 function printDeps(deps = [], color = chalk.blue) {
   return deps.map(({ name }) => color(name)).join('  ')
@@ -40,14 +41,19 @@ module.exports = function getHandlers () {
     }
   }
 
-  async function graph () {
+  async function graph (packages) {
     const connections = buildGraph()
-    Object.entries(connections).forEach(([name, { dependencies, peerDependencies, devDependencies }]) => {
+    const dependents = inverseDependencyGraph(connections)
+    const list = Object.keys(connections).filter(packages?.length ? (name) => packages.includes(name) : () => true)
+    list.forEach((packageName) => {
+      const deps = dependents.dependencies[packageName];
+      const peer = dependents.peerDependencies[packageName];
+      const devs = dependents.devDependencies[packageName];
       console.log(
-        chalk.green(name), 
-        '\n   DEPS', printDeps(dependencies, chalk.cyan),
-        '\n   PEER', printDeps(peerDependencies, chalk.blue),
-        '\n   DEVS', printDeps(devDependencies, chalk.grey),
+        chalk.green(packageName), 'is depended on by:',
+        deps?.length ? '\n  as a dependency:       ' + printDeps(deps, chalk.cyan) : '',
+        peer?.length ? '\n  as a peerDependency:   ' + printDeps(peer, chalk.blue) : '',
+        devs?.length ? '\n  as a devDependency:    ' + printDeps(devs, chalk.grey) : '',
         '\n'
       )
     })
