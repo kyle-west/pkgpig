@@ -1,7 +1,7 @@
 const chalk = require('chalk');
 const { inc } = require('./lib/util');
 const semver = require('semver');
-const { buildGraph, targetUpdate, identifyOutOfSync, commit } = require('./index');
+const { buildGraph, targetUpdate, identifyOutOfSync, commit, checkRootPackage } = require('./index');
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs');
 const { inverseDependencyGraph } = require('./lib/pkg');
 
@@ -108,6 +108,15 @@ module.exports = function getHandlers () {
         ])
 
         if (nextAction === 'Accept all changes') {
+          const { outOfSync, updateRootPackage } = checkRootPackage(connections)
+
+          if (outOfSync) {
+            const updateRoot = await confirm('The monorepo root package.json looks like it might be out of date. Would you like to upgrade dependencies?', true)
+            if (updateRoot) {
+              updateRootPackage()
+            }
+          }
+
           commit(connections)
           userLoop = 'done'
         }
