@@ -1,9 +1,13 @@
 const { writeFile } = require('fs')
 const { resolve } = require('path')
-const { makeDependencyGraph, inverseDependencyGraph } = require('./lib/pkg');
+const { Pkg, makeDependencyGraph, inverseDependencyGraph } = require('./lib/pkg');
 const { getAllPackages } = require('./lib/util');
 const semver = require('semver');
 const { diff } = require('./lib/util');
+
+function getRootPkg () {
+  return new Pkg(require(resolve('package.json')))
+}
 
 function getPackages() {
   const packageFilenames = getAllPackages()
@@ -110,10 +114,51 @@ function commit (graph) {
   })
 }
 
+function checkRootPackage (graph) {
+  const rootPkg = getRootPkg()
+  debugger
+  function check(type) {
+    const deps = rootPkg._contents[type] || {}
+    return Object.entries(deps).some(([name, range]) => {
+      const pkg = graph[name]
+      if (pkg) {
+        // Note that semver.satisfies counts 10.0.0 as satisfying ^10.0.0-rc.0 so we can't use that
+        // const inSync = semver.satisfies(pkg.version.pending, range)
+        // we do a dirty check instead
+        const outOfSync = pkg.version.pending !== semver.minVersion(range).raw
+        if (outOfSync) {
+          deps[name] = '^' + pkg.version.pending
+        }
+        return outOfSync
+      }
+      return false
+    })
+  }
+
+  check('dependencies')
+  check('peerDependencies')
+  check('devDependencies')
+
+  return {
+    outOfSync: check('dependencies') || check('peerDependencies') || check('devDependencies'), 
+    updateRootPackage: () => {
+      const fileName = resolve('package.json')
+      writeFile(fileName, rootPkg.toString() + '\n', (err) => {
+        if (err) {
+          console.error(err)
+        } else {
+          console.log(fileName, 'updated successfully.')
+        }
+      })
+    }
+  }
+}
+
 module.exports = {
   getPackages,
   buildGraph,
   identifyOutOfSync,
   targetUpdate,
   commit,
+  checkRootPackage,
 }
