@@ -20,6 +20,10 @@ function byKey([a], [b]) {
   return a.localeCompare(b)
 }
 
+function sortByName(deps) {
+  return [...deps].sort((a, b) => a.name.localeCompare(b.name))
+}
+
 function printChangedVersions(graph) {
   Object.entries(graph)
     .sort(byKey)
@@ -61,9 +65,9 @@ module.exports = function getHandlers() {
   async function graph(packages) {
     const connections = buildGraph()
     const dependents = inverseDependencyGraph(connections)
-    const list = Object.keys(connections).filter(
-      packages?.length ? (name) => packages.includes(name) : () => true
-    )
+    const list = Object.keys(connections)
+      .filter(packages?.length ? (name) => packages.includes(name) : () => true)
+      .sort()
     list.forEach((packageName) => {
       const deps = dependents.dependencies[packageName]
       const peer = dependents.peerDependencies[packageName]
@@ -91,15 +95,15 @@ module.exports = function getHandlers() {
       const outOfSync = identifyOutOfSync(connections)
       if (outOfSync.dependencies.length) {
         console.log(chalk.bgBlue('dependencies'))
-        console.table(outOfSync.dependencies)
+        console.table(sortByName(outOfSync.dependencies))
       }
       if (outOfSync.peerDependencies.length) {
         console.log(chalk.bgCyan('peerDependencies'))
-        console.table(outOfSync.peerDependencies)
+        console.table(sortByName(outOfSync.peerDependencies))
       }
       if (outOfSync.devDependencies.length) {
         console.log(chalk.bgGray('devDependencies'))
-        console.table(outOfSync.devDependencies)
+        console.table(sortByName(outOfSync.devDependencies))
       }
 
       if (
