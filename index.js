@@ -59,6 +59,9 @@ function compareGT (target, current) {
   if (target.includes('prerelease')) {
     return !current
   }
+  if (target === 'release') {
+    return !current
+  }
   return false
 }
 
@@ -114,6 +117,12 @@ function commit (graph) {
   })
 }
 
+function summarize (graph) {
+  return Object.entries(graph).map(([name, { version: { original, pending } }]) =>
+    ({ Package: name, PendingVersion: pending, OriginalVersion: original, Changed: original !== pending })
+  ).sort((a, b) => a.Package.localeCompare(b.Package))
+}
+
 function checkRootPackage (graph) {
   const rootPkg = getRootPkg()
   debugger
@@ -161,4 +170,5 @@ module.exports = {
   targetUpdate,
   commit,
   checkRootPackage,
+  summarize,
 }
