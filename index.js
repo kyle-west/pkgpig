@@ -1,30 +1,29 @@
 const { writeFile } = require('fs')
 const { resolve } = require('path')
-const { Pkg, makeDependencyGraph, inverseDependencyGraph } = require('./lib/pkg');
-const { getAllPackages } = require('./lib/util');
-const semver = require('semver');
-const { diff } = require('./lib/util');
+const { Pkg, makeDependencyGraph, inverseDependencyGraph } = require('./lib/pkg')
+const { getAllPackages } = require('./lib/util')
+const semver = require('semver')
+const { diff } = require('./lib/util')
 
-function getRootPkg () {
+function getRootPkg() {
   return new Pkg(require(resolve('package.json')))
 }
 
 function getPackages() {
   const packageFilenames = getAllPackages()
-  const packageFiles = packageFilenames
-    .map((file) => ({ file, contents: require(resolve(file)) }))
-  return packageFiles;
+  const packageFiles = packageFilenames.map((file) => ({ file, contents: require(resolve(file)) }))
+  return packageFiles
 }
 
-function buildGraph () {
+function buildGraph() {
   const graph = makeDependencyGraph(getPackages())
-  return graph;
+  return graph
 }
 
-function identifyOutOfSync (graph, versionType = 'original') {
+function identifyOutOfSync(graph, versionType = 'original') {
   const inverseGraph = inverseDependencyGraph(graph)
-  const outOfSync = { dependencies: [] , peerDependencies: [], devDependencies: [] }
-  
+  const outOfSync = { dependencies: [], peerDependencies: [], devDependencies: [] }
+
   function check(type) {
     Object.entries(inverseGraph[type]).forEach(([name, dependents]) => {
       const pkg = graph[name]
@@ -32,7 +31,11 @@ function identifyOutOfSync (graph, versionType = 'original') {
         const range = dependent._contents[type][name]
         const inSync = semver.satisfies(pkg.version[versionType], range)
         if (!inSync) {
-          outOfSync[type].push({ name: dependent.name, requires: `${name}@${range}`, current: pkg.version[versionType] })
+          outOfSync[type].push({
+            name: dependent.name,
+            requires: `${name}@${range}`,
+            current: pkg.version[versionType],
+          })
         }
       })
     })
@@ -45,10 +48,15 @@ function identifyOutOfSync (graph, versionType = 'original') {
   return outOfSync
 }
 
-function compareGT (target, current) {
+function compareGT(target, current) {
   if (!target) return false
   if (target.includes('major')) {
-    return !current || current.includes('minor') || current.includes('patch') || current.includes('prerelease')
+    return (
+      !current ||
+      current.includes('minor') ||
+      current.includes('patch') ||
+      current.includes('prerelease')
+    )
   }
   if (target.includes('minor')) {
     return !current || current.includes('patch') || current.includes('prerelease')
@@ -68,11 +76,15 @@ function compareGT (target, current) {
 function cascade({ pkg, targetDiffType, dependents, graph }) {
   if (compareGT(targetDiffType, pkg.versionDiff)) {
     pkg.inc(targetDiffType)
-    
-    let [ baseType, prerelease = '' ] = targetDiffType.split('-');
+
+    let [baseType, prerelease = ''] = targetDiffType.split('-')
 
     const bumpMajor = (dependent) => {
-      if (baseType === 'major' && dependent.version.original.startsWith('0') && !prerelease.startsWith('pre')) {
+      if (
+        baseType === 'major' &&
+        dependent.version.original.startsWith('0') &&
+        !prerelease.startsWith('pre')
+      ) {
         cascade({ pkg: dependent, targetDiffType: `major-pre${prerelease}`, dependents, graph })
       } else {
         cascade({ pkg: dependent, targetDiffType, dependents, graph })
@@ -91,9 +103,9 @@ function cascade({ pkg, targetDiffType, dependents, graph }) {
   }
 }
 
-function targetUpdate (targetPkg, targetVersion, graph) {
+function targetUpdate(targetPkg, targetVersion, graph) {
   const { version } = semver.parse(targetVersion)
-  
+
   const targetDiffType = diff(targetPkg.version.pending, version)
   const dependents = inverseDependencyGraph(graph)
 
@@ -101,7 +113,7 @@ function targetUpdate (targetPkg, targetVersion, graph) {
   return graph
 }
 
-function commit (graph) {
+function commit(graph) {
   getPackages().forEach(({ file, contents }) => {
     const pkg = graph[contents.name]
     const filepath = resolve('.', file)
@@ -117,15 +129,27 @@ function commit (graph) {
   })
 }
 
-function summarize (graph) {
-  return Object.entries(graph).map(([name, { version: { original, pending } }]) =>
-    ({ Package: name, PendingVersion: pending, OriginalVersion: original, Changed: original !== pending })
-  ).sort((a, b) => a.Package.localeCompare(b.Package))
+function summarize(graph) {
+  return Object.entries(graph)
+    .map(
+      ([
+        name,
+        {
+          version: { original, pending },
+        },
+      ]) => ({
+        Package: name,
+        PendingVersion: pending,
+        OriginalVersion: original,
+        Changed: original !== pending,
+      })
+    )
+    .sort((a, b) => a.Package.localeCompare(b.Package))
 }
 
-function checkRootPackage (graph) {
+function checkRootPackage(graph) {
   const rootPkg = getRootPkg()
-  debugger
+
   function check(type) {
     const deps = rootPkg._contents[type] || {}
     return Object.entries(deps).some(([name, range]) => {
@@ -149,7 +173,7 @@ function checkRootPackage (graph) {
   check('devDependencies')
 
   return {
-    outOfSync: check('dependencies') || check('peerDependencies') || check('devDependencies'), 
+    outOfSync: check('dependencies') || check('peerDependencies') || check('devDependencies'),
     updateRootPackage: () => {
       const fileName = resolve('package.json')
       writeFile(fileName, rootPkg.toString() + '\n', (err) => {
@@ -159,7 +183,7 @@ function checkRootPackage (graph) {
           console.log(fileName, 'updated successfully.')
         }
       })
-    }
+    },
   }
 }
 

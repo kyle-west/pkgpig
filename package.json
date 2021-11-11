@@ -18,7 +18,9 @@
   },
   "scripts": {
     "test": "jest --watch",
-    "test:ci": "jest --coverage"
+    "test:ci": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "keywords": [
     "semantic",
@@ -26,5 +28,11 @@
     "package",
     "monorepo",
     "upgrade"
-  ]
+  ],
+  "devDependencies": {
+    "@digital-taco/eslint-config": "^1.1.1",
+    "eslint": "^7.32.0",
+    "eslint-plugin-jest": "^25.2.4",
+    "prettier": "^2.4.1"
+  }
 }

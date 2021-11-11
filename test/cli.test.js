@@ -1,37 +1,37 @@
 const { resolve } = require('path')
-const { spawn } = require('child_process');
+const { spawn } = require('child_process')
 
 const KEY_STROKE = {
-  ARROW_UP: "\u001b[A",
-  ARROW_DOWN: "\u001b[B",
-  ARROW_LEFT: "\u001b[C",
-  ARROW_RIGHT: "\u001b[D",
+  ARROW_UP: '\u001b[A',
+  ARROW_DOWN: '\u001b[B',
+  ARROW_LEFT: '\u001b[C',
+  ARROW_RIGHT: '\u001b[D',
   ENTER: '\n',
 }
 
 class CLITestInstance {
-  constructor ({ args, scope = 'mono1' } = {}) {
+  constructor({ args, scope = 'mono1' } = {}) {
     const script = resolve('./cli.js')
     this.cli = spawn(script, args, { cwd: resolve(`test/${scope}`) })
   }
 
-  output (timeout = 1000) {
-    return new Promise(resolve => {
+  output(timeout = 1000) {
+    return new Promise((resolve) => {
       let data = ''
       let submit
-      this.cli.stdout.on('data', buffer => {
-        data += buffer.toString();
+      this.cli.stdout.on('data', (buffer) => {
+        data += buffer.toString()
         clearTimeout(submit)
         submit = setTimeout(() => resolve(data), timeout)
       })
     })
   }
 
-  input (...args) {
+  input(...args) {
     return this.cli.stdin.write(...args)
   }
 
-  cleanup () {
+  cleanup() {
     return this.cli.kill()
   }
 }
@@ -111,15 +111,15 @@ describe('CLI', () => {
       `)
       await cli.cleanup()
     })
-    
+
     it('should let me view out of sync packages (no changes needed)', async () => {
       const cli = new CLITestInstance({ args: ['sync'] })
       await cli.output()
-      
+
       await cli.input(KEY_STROKE.ARROW_DOWN)
       await cli.output() // wait for selection rerender
       await cli.input(KEY_STROKE.ENTER)
-      
+
       expect(await cli.output()).toContain('Everything up to date.')
 
       await cli.cleanup()
@@ -128,11 +128,11 @@ describe('CLI', () => {
     it('should let me view out of sync packages (one package out of sync)', async () => {
       const cli = new CLITestInstance({ args: ['sync'], scope: 'mono2' })
       await cli.output()
-      
+
       await cli.input(KEY_STROKE.ARROW_DOWN)
       await cli.output() // wait for selection rerender
       await cli.input(KEY_STROKE.ENTER)
-      
+
       expect(loosely(await cli.output())).toContain(loosely`
         peerDependencies
         ┌─────────┬─────────────────┬────────────────────────┬─────────┐
@@ -150,13 +150,13 @@ describe('CLI', () => {
     it('should allow updating of out of sync packages', async () => {
       const cli = new CLITestInstance({ args: ['sync'], scope: 'mono2' })
       await cli.output()
-      
+
       await cli.input(KEY_STROKE.ARROW_DOWN)
       await cli.output() // wait for selection rerender
       await cli.input(KEY_STROKE.ARROW_DOWN)
       await cli.output() // wait for selection rerender
       await cli.input(KEY_STROKE.ENTER)
-      
+
       expect(loosely(await cli.output())).toContain(loosely`
         The following packages will update:
           @test/mono2-b 1.0.0 --> 2.0.0
@@ -171,7 +171,7 @@ describe('CLI', () => {
       const cli = new CLITestInstance({ args: ['sync'] })
       await cli.output()
       await cli.input(KEY_STROKE.ENTER)
-      
+
       expect(loosely(await cli.output())).toContain(loosely`
         ? Which package are you wanting to release?: (Use arrow keys)
         ❯ @test/mono1-a 
@@ -182,11 +182,11 @@ describe('CLI', () => {
       `)
 
       await cli.input(KEY_STROKE.ENTER)
-      
+
       expect(loosely(await cli.output())).toContain(loosely`
         ? What is the new version (current is 1.0.0)?
       `)
-      
+
       await cli.input('2.0.0-alpha.0')
       await cli.input(KEY_STROKE.ENTER)
 
