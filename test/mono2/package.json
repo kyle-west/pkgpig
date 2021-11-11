@@ -1,0 +1,8 @@
+{
+  "name": "@test/mono2",
+  "description": "Packages are out of sync in this monorepo",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@test/mono1-a": "^1.0.0"
+  }
+}
