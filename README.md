@@ -2,7 +2,7 @@
 
 _WIP: This is a refactor of some other CLI I wrote. Hopefully there are no bugs. But if so please [report it on GitHub](https://github.com/kyle-west/pkgpig/issues). Thank you for your patience._
 
-![Status Badge](https://github.com/kyle-west/pkgpig/workflows/Install%20and%20Test%20Flow/badge.svg)
+![Latest Version Badge](https://img.shields.io/npm/v/pkgpig) ![Test Status Badge](https://github.com/kyle-west/pkgpig/workflows/Install%20and%20Test%20Flow/badge.svg) ![Publish Status Badge](https://github.com/kyle-west/pkgpig/workflows/NPM%20Publish/badge.svg)
 
 Manage semantic versioning in a monorepo context. 
 
