@@ -1,7 +1,7 @@
 const chalk = require('chalk');
 const { inc } = require('./lib/util');
 const semver = require('semver');
-const { buildGraph, targetUpdate, identifyOutOfSync, commit, checkRootPackage } = require('./index');
+const { buildGraph, targetUpdate, identifyOutOfSync, commit, summarize, checkRootPackage } = require('./index');
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs');
 const { inverseDependencyGraph } = require('./lib/pkg');
 
@@ -87,25 +87,37 @@ module.exports = function getHandlers () {
       }
     } else if (action === 'Prepare new release') {
       let nextAction
-      let userLoop = 'continue'
+      let userLoop = 'release'
       
       while (userLoop !== 'done') {
-        const targetName = await select('Which package are you wanting to release?', Object.keys(connections).sort())
-        const targetPkg = connections[targetName]
-        const promptDetail = targetPkg.version.pending === targetPkg.version.original
-          ? `current is ${targetPkg.version.pending}`
-          : `pending is ${targetPkg.version.pending}`;
-        const targetVersion = await text(`What is the new version (${promptDetail})?`)
-        
-        console.log(chalk.green(`Preparing update for ${targetPkg.name} to move to version ${targetVersion}`))
-        const updated = targetUpdate(targetPkg, targetVersion, connections)
-        printUpdatedVersions(targetPkg, updated)
+        if (userLoop === 'release') {
+          const targetName = await select('Which package are you wanting to release?', Object.keys(connections).sort())
+          const targetPkg = connections[targetName]
+          const promptDetail = targetPkg.version.pending === targetPkg.version.original
+            ? `current is ${targetPkg.version.pending}`
+            : `pending is ${targetPkg.version.pending}`;
+          const targetVersion = await text(`What is the new version (${promptDetail})?`)
+          
+          console.log(chalk.green(`Preparing update for ${targetPkg.name} to move to version ${targetVersion}`))
+          const updated = targetUpdate(targetPkg, targetVersion, connections)
+          printUpdatedVersions(targetPkg, updated)
+        }
         
         nextAction = await select('What would you like to do next?', [
           'Accept all changes',
           'Reject all changes',
-          'Prepare another update alongside the current pending state'
+          'Prepare another update alongside the current pending state',
+          'View all versions',
         ])
+
+        if (nextAction === 'Prepare another update alongside the current pending state') {
+          userLoop = 'release'
+        }
+        
+        if (nextAction === 'View all versions') {
+          console.table(summarize(connections))
+          userLoop = 'view-all'
+        }
 
         if (nextAction === 'Accept all changes') {
           const { outOfSync, updateRootPackage } = checkRootPackage(connections)
@@ -120,6 +132,7 @@ module.exports = function getHandlers () {
           commit(connections)
           userLoop = 'done'
         }
+        
         if (nextAction === 'Reject all changes') {
           console.log('Aborting...')
           userLoop = 'done'
