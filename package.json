@@ -16,6 +16,13 @@
   "bin": {
     "pkgpig": "./cli.js"
   },
+  "files": [
+    "**/*.js",
+    "!.eslintrc.js",
+    "!*.test.js",
+    "!test/**",
+    "!coverage/**"
+  ],
   "scripts": {
     "test": "jest --watch",
     "test:ci": "jest --coverage",
