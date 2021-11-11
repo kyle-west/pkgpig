@@ -1,0 +1,7 @@
+{
+  "name": "@test/mono1-b",
+  "version": "1.0.0",
+  "peerDependencies": {
+    "@test/mono1-a": "^1.0.0"
+  }
+}

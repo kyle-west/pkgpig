@@ -1,0 +1,8 @@
+{
+  "name": "@test/mono1",
+  "description": "Everything in this monorepo is up-to-date with itself",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@test/mono1-a": "^1.0.0"
+  }
+}
