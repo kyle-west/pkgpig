@@ -72,18 +72,18 @@ describe('CLI', () => {
       const cli = new CLITestInstance({ args: ['graph'] })
       let output = await cli.output()
       expect(loosely(output)).toEqual(loosely`
-      @test/mono1-a is depended on by:  
-        as a peerDependency:   @test/mono1-c  @test/mono1-d  @test/mono1-b  
-      
-      @test/mono1-b is depended on by:   
-        as a devDependency:    @test/mono1-c  @test/mono1-d 
-      
-      @test/mono1-c is depended on by: 
-        as a dependency:       @test/mono1-d   
-      
-      @test/mono1-d is depended on by:    
-      
-      @test/mono1-e is depended on by:   
+        @test/mono1-a is depended on by:
+          as a peerDependency:   @test/mono1-b  @test/mono1-c  @test/mono1-d
+
+        @test/mono1-b is depended on by:
+          as a devDependency:    @test/mono1-c  @test/mono1-d
+
+        @test/mono1-c is depended on by:
+          as a dependency:       @test/mono1-d
+
+        @test/mono1-d is depended on by:
+
+        @test/mono1-e is depended on by:
       `)
       await cli.cleanup()
     })
@@ -92,8 +92,8 @@ describe('CLI', () => {
       const cli = new CLITestInstance({ args: ['graph', '@test/mono1-a'] })
       let output = await cli.output()
       expect(loosely(output)).toEqual(loosely`
-        @test/mono1-a is depended on by:  
-          as a peerDependency:   @test/mono1-c  @test/mono1-d  @test/mono1-b  
+        @test/mono1-a is depended on by:
+          as a peerDependency:   @test/mono1-b  @test/mono1-c  @test/mono1-d
       `)
       await cli.cleanup()
     })

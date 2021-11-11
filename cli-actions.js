@@ -12,16 +12,18 @@ const {
 const { confirm, checkbox, text, select, number, password } = require('./lib/inputs')
 const { inverseDependencyGraph } = require('./lib/pkg')
 
-function printDeps(deps = [], color = chalk.blue) {
-  return deps.map(({ name }) => color(name)).join('  ')
-}
-
 function byKey([a], [b]) {
   return a.localeCompare(b)
 }
 
 function sortByName(deps) {
   return [...deps].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function printDeps(deps = [], color = chalk.blue) {
+  return sortByName(deps)
+    .map(({ name }) => color(name))
+    .join('  ')
 }
 
 function printChangedVersions(graph) {
