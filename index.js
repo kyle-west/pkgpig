@@ -152,20 +152,22 @@ function checkRootPackage(graph) {
 
   function check(type) {
     const deps = rootPkg._contents[type] || {}
-    return Object.entries(deps).some(([name, range]) => {
-      const pkg = graph[name]
-      if (pkg) {
-        // Note that semver.satisfies counts 10.0.0 as satisfying ^10.0.0-rc.0 so we can't use that
-        // const inSync = semver.satisfies(pkg.version.pending, range)
-        // we do a dirty check instead
-        const outOfSync = pkg.version.pending !== semver.minVersion(range).raw
-        if (outOfSync) {
-          deps[name] = '^' + pkg.version.pending
+    return Object.entries(deps)
+      .map(([name, range]) => {
+        const pkg = graph[name]
+        if (pkg) {
+          // Note that semver.satisfies counts 10.0.0 as satisfying ^10.0.0-rc.0 so we can't use that
+          // const inSync = semver.satisfies(pkg.version.pending, range)
+          // we do a dirty check instead
+          const outOfSync = pkg.version.pending !== semver.minVersion(range).raw
+          if (outOfSync) {
+            deps[name] = '^' + pkg.version.pending
+          }
+          return outOfSync
         }
-        return outOfSync
-      }
-      return false
-    })
+        return false
+      })
+      .some((x) => !x) // using some to reduce to a boolean, but we need to map over the whole array to update everything
   }
 
   check('dependencies')
